@@ -1,0 +1,8 @@
+[tools]
+
+# Core dependencies
+go = "1.22.7"
+just = "1.37.0"
+
+# Go dependencies
+"ubi:golangci/golangci-lint" = "v1.63.4"

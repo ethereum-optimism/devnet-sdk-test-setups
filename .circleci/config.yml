@@ -1,0 +1,78 @@
+version: 2.1
+
+executors:
+  default:
+    machine:
+      image: ubuntu-2404:2024.05.1
+
+workflows:
+  main:
+    jobs:
+      - go-lint
+      - go-test
+
+commands:
+  install-dependencies:
+    steps:
+      - run:
+          name: Install mise
+          command: curl https://mise.run | MISE_INSTALL_PATH=/home/circleci/bin/mise sh
+      - run:
+          name: Activate mise
+          command: echo 'eval "$(mise activate bash)"' >> $BASH_ENV
+      - run:
+          name: Install mise dependencies
+          command: mise install
+
+  install-go-modules:
+    parameters:
+      from:
+        description: Path to go.sum file
+        type: string
+        default: go.sum
+      path:
+        description: Go module cache path
+        type: string
+        default: /home/circleci/.go_workspace/pkg/mod
+      version:
+        description: Version (cache breaker)
+        type: string
+        default: v1
+    steps:
+      - restore_cache:
+          name: Restore Go modules cache
+          keys:
+            - go-mod-{{ arch }}-{{ checksum "<< parameters.from >>" }}-<< parameters.version >>
+      - run:
+          name: Download Go modules
+          command: go mod download
+      - save_cache:
+          key: go-mod-{{ arch }}-{{ checksum "<< parameters.from >>" }}-<< parameters.version >>
+          paths:
+              - << parameters.path >>
+
+jobs:
+  go-lint:
+    executor: default
+    steps:
+      - checkout
+      - install-dependencies
+      - install-go-modules
+      - run:
+          name: Check go.mod
+          command: |
+            just tidy cli
+            git diff --exit-code
+      - run:
+          name: Run lint
+          command: just lint
+  
+  go-test:
+    executor: default
+    steps:
+      - checkout
+      - install-dependencies
+      - install-go-modules
+      - run:
+          name: Run tests
+          command: just test
