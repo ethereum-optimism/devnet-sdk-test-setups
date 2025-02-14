@@ -61,7 +61,7 @@ jobs:
       - run:
           name: Check go.mod
           command: |
-            just tidy cli
+            just tidy
             git diff --exit-code
       - run:
           name: Run lint
