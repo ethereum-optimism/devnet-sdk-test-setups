@@ -2,7 +2,7 @@ module devnetsdktest
 
 go 1.22.7
 
-require github.com/ethereum-optimism/optimism v1.11.1-0.20250214213249-074c2231c3e2
+require github.com/ethereum-optimism/optimism v1.11.1-0.20250218224429-88d2a9c64636
 
 require (
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
