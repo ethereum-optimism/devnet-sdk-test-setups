@@ -51,6 +51,13 @@ commands:
           paths:
               - << parameters.path >>
 
+  run-kurtosis:
+    steps:
+      - setup_remote_docker
+      - run:
+          name: Run kurtosis barebones devnet
+          command: kurtosis run --enclave barebones-devnet github.com/ethpandaops/optimism-package --args-file ./systems/kurtosis/barebones_devnet.yaml
+
 jobs:
   go-lint:
     executor: default
@@ -73,6 +80,7 @@ jobs:
       - checkout
       - install-dependencies
       - install-go-modules
+      - run-kurtosis
       - run:
           name: Run tests
           command: just test
