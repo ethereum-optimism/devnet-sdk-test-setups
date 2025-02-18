@@ -6,3 +6,4 @@ just = "1.37.0"
 
 # Go dependencies
 "ubi:golangci/golangci-lint" = "v1.63.4"
+"ubi:kurtosis-tech/kurtosis-cli-release-artifacts[exe=kurtosis]" = "1.4.4"
