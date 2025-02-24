@@ -9,7 +9,11 @@ workflows:
   main:
     jobs:
       - go-lint
-      - go-test
+      - run-devnet-tests:
+          matrix:
+            parameters:
+              args-file:
+                - ./systems/kurtosis/barebones_devnet.yaml
 
 commands:
   install-dependencies:
@@ -51,11 +55,29 @@ commands:
           paths:
               - << parameters.path >>
 
-  run-kurtosis:
+  start-kurtosis-devnet:
+    parameters:
+      args-file:
+        type: string
+        description: Path to kurtosis args file
+      enclave-name:
+        type: string
+        description: Kurtosis enclave name
+        default: devnet
+      package:
+        type: string
+        description: Kurtosis package to use
+        default: github.com/ethpandaops/optimism-package
     steps:
       - run:
           name: Run kurtosis barebones devnet
-          command: kurtosis run --enclave barebones-devnet github.com/ethpandaops/optimism-package --args-file ./systems/kurtosis/barebones_devnet.yaml
+          command: kurtosis run --enclave << parameters.enclave-name >> << parameters.package >> --args-file << parameters.args-file >>
+      - run:
+          name: Export devnet-sdk environment URL
+          command: echo "export DEVNET_ENV_URL=ktnative://<< parameters.enclave-name >>$(realpath << parameters.args-file >>)" >> $BASH_ENV
+      - run:
+          name: Show devnet-sdk environment URL
+          command: echo "Using devnet environment from $DEVNET_ENV_URL"
 
 jobs:
   go-lint:
@@ -73,15 +95,19 @@ jobs:
           name: Run lint
           command: just lint
   
-  go-test:
+  run-devnet-tests:
     executor: default
+    parameters:
+      args-file:
+        type: string
+        description: Path to kurtosis args file
     steps:
       - checkout
       - install-dependencies
       - install-go-modules
-      - run-kurtosis
+      - start-kurtosis-devnet:
+          args-file: << parameters.args-file >>
       - run:
           name: Run tests
           command: just test
-          environment:
             
