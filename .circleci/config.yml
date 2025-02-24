@@ -53,7 +53,6 @@ commands:
 
   run-kurtosis:
     steps:
-      - setup_remote_docker
       - run:
           name: Run kurtosis barebones devnet
           command: kurtosis run --enclave barebones-devnet github.com/ethpandaops/optimism-package --args-file ./systems/kurtosis/barebones_devnet.yaml
@@ -84,3 +83,5 @@ jobs:
       - run:
           name: Run tests
           command: just test
+          environment:
+            
