@@ -18,7 +18,7 @@ func smokeTestScenario(chainIdx uint64, walletGetter validators.WalletGetter) sy
 		ctx := t.Context()
 		logger := slog.With("test", "TestMinimal", "devnet", sys.Identifier())
 
-		chain := sys.L2(chainIdx)
+		chain := sys.L2s()[chainIdx]
 		logger = logger.With("chain", chain.ID())
 		logger.InfoContext(ctx, "starting test")
 
