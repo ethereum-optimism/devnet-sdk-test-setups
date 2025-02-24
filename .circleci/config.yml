@@ -5,10 +5,24 @@ executors:
     machine:
       image: ubuntu-2404:2024.05.1
 
+parameters:
+  # We define a version of the optimism-package as a pipeline parameter
+  # 
+  # This allows us to test not only changes to chain components but also changes
+  # to optimism-package (by running this workflow with a specific commit for example)
+  optimism-package-ref:
+    type: string
+    description: The git ref (commit hash, branch name or a tag) of optimism-package to use
+    default: main
+
 workflows:
-  main:
+  # This workflow runs basic checks on this repository
+  check:
     jobs:
       - go-lint
+  # This is the workflow responsible for running the devnet-sdk-powered tests
+  devnet-tests:
+    jobs:
       - run-devnet-tests:
           matrix:
             parameters:
@@ -16,6 +30,7 @@ workflows:
                 - ./systems/kurtosis/barebones_devnet.yaml
 
 commands:
+  # This command installs global software dependencies defined in mise.toml
   install-dependencies:
     steps:
       - run:
@@ -28,6 +43,7 @@ commands:
           name: Install mise dependencies
           command: mise install
 
+  # This command installs required go modules
   install-go-modules:
     parameters:
       from:
@@ -55,22 +71,30 @@ commands:
           paths:
               - << parameters.path >>
 
+  # This command will start a kurtosis enclave based on the provided parameters
+  # 
+  # After the enclave has started, a DEVNET_ENV_URL environment variable is exported.
+  # This environment variable is consumed by the devnet-sdk test runner.
   start-kurtosis-devnet:
     parameters:
+      # Kurtosis arguments file is the only mandatory parameter
       args-file:
         type: string
         description: Path to kurtosis args file
+      # Enclave name is optional and can be passed if multiple enclaves need to run at the same time
       enclave-name:
         type: string
         description: Kurtosis enclave name
         default: devnet
+      # Kurtosis package is optional - we normally want to use github.com/ethpandaops/optimism-package
+      # with the version defined by the pipeline
       package:
         type: string
         description: Kurtosis package to use
-        default: github.com/ethpandaops/optimism-package
+        default: github.com/ethpandaops/optimism-package@<< pipeline.parameters.optimism-package-ref >>
     steps:
       - run:
-          name: Run kurtosis barebones devnet
+          name: Start kurtosis devnet
           command: kurtosis run --enclave << parameters.enclave-name >> << parameters.package >> --args-file << parameters.args-file >>
       - run:
           name: Export devnet-sdk environment URL
