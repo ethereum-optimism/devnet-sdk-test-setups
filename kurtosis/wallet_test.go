@@ -25,7 +25,7 @@ func TestAcquireWalletWithFundsExample(t *testing.T) {
 			ctx := t.Context()
 
 			wallet := walletGetter(ctx)
-			require.Greater(t, wallet.Balance().Int, sdktypes.NewBalance(big.NewInt(0)).Int)
+			require.Greater(t, wallet.Balance().Cmp(big.NewInt(0)), 0)
 		},
 		walletValidator,
 	)
