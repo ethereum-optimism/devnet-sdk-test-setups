@@ -45,19 +45,23 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 				return types.SignTx(tx, signer, user.PrivateKey())
 			}
 
-			// block, err := client.BlockByNumber(ctx, nil)
-			// require.NoError(t, err)
+			block, err := client.BlockByNumber(ctx, nil)
+			require.NoError(t, err)
 
-			// tipCap, err := client.SuggestGasTipCap(ctx)
-			// require.NoError(t, err)
+			tipCap, err := client.SuggestGasTipCap(ctx)
+			require.NoError(t, err)
 
 			t.Log("Creating an OptimismMintableERC20")
 
 			// Now we create a new ERC20 token
+			//
+			// FIXME Instead of using the OptimismMintableERC20Factory, we'll need to deploy a fresh ERC20
 			createTx, err := erc20factory.CreateOptimismMintableERC20(&bind.TransactOpts{
-				Signer:  signerFn,
-				From:    user.Address(),
-				Context: ctx,
+				Signer:    signerFn,
+				From:      user.Address(),
+				Context:   ctx,
+				GasFeeCap: block.BaseFee(),
+				GasTipCap: tipCap,
 			}, common.HexToAddress("0x0000000000000000000000000000000000000007"), "Mock", "MCK")
 			require.NoError(t, err)
 
