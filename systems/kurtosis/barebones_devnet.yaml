@@ -5,6 +5,7 @@ optimism_package:
           - el_type: op-reth
       network_params:
         name: kurtosis
+        network_id: 1
 ethereum_package:
   participants:
     - el_type: geth
