@@ -19,8 +19,8 @@ import (
 func TestIsthmusInitiateWithdrawal(t *testing.T) {
 	chainIdx := uint64(0) // We'll use the first L2 chain for this test
 
-	walletGetter, fundsValidator := validators.AcquireL2WalletWithFunds(chainIdx, sdktypes.NewBalance(big.NewInt(1.0*constants.ETH)))
-	lowLevelSystemGetter, validator := validators.AcquireLowLevelSystem()
+	walletGetter, walletValidator := validators.AcquireL2WalletWithFunds(chainIdx, sdktypes.NewBalance(big.NewInt(1.0*constants.ETH)))
+	lowLevelSystemGetter, lowLevelSystemValidator := validators.AcquireLowLevelSystem()
 
 	systest.SystemTest(t,
 		func(t systest.T, sys system.System) {
@@ -97,7 +97,7 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 			// Log log log
 			t.Log("Minted some tokens")
 		},
-		fundsValidator,
-		validator,
+		walletValidator,
+		lowLevelSystemValidator,
 	)
 }
