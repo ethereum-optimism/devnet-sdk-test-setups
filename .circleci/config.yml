@@ -28,6 +28,7 @@ workflows:
             parameters:
               args-file:
                 - ./systems/kurtosis/barebones_devnet.yaml
+                - ./systems/kurtosis/isthmus_devnet.yaml
 
 commands:
   # This command installs global software dependencies defined in mise.toml
@@ -95,7 +96,7 @@ commands:
     steps:
       - run:
           name: Start kurtosis devnet
-          command: kurtosis run --enclave << parameters.enclave-name >> << parameters.package >> --args-file << parameters.args-file >>
+          command: just run-kurtosis << parameters.args-file >> << parameters.enclave-name >> << parameters.package >>
       - run:
           name: Export devnet-sdk environment URL
           command: echo "export DEVNET_ENV_URL=ktnative://<< parameters.enclave-name >>$(realpath << parameters.args-file >>)" >> $BASH_ENV
