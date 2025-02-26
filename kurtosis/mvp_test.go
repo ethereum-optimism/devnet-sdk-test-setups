@@ -40,7 +40,7 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 			require.NoError(t, err)
 
 			// Ugly code for signing transactions
-			signer := types.NewEIP155Signer(chain.ID())
+			signer := types.NewLondonSigner(chain.ID())
 			signerFn := func(address common.Address, tx *types.Transaction) (*types.Transaction, error) {
 				return types.SignTx(tx, signer, user.PrivateKey())
 			}
@@ -90,8 +90,8 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 			mintTx, err := erc20.Mint(&bind.TransactOpts{
 				Signer:    signerFn,
 				From:      user.Address(),
-				GasFeeCap: big.NewInt(200),
-				GasTipCap: big.NewInt(100),
+				GasFeeCap: block.BaseFee(),
+				GasTipCap: tipCap,
 			}, user.Address(), big.NewInt(9000000000))
 			require.NoError(t, err)
 
