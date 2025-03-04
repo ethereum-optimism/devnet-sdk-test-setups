@@ -1,19 +1,21 @@
 DEFAULT_KURTOSIS_PACKAGE := 'github.com/ethpandaops/optimism-package@main'
 DEFAULT_KURTOSIS_ENCLAVE := 'devnet'
 
+TMPDIR := `mktemp -d`
+
+# This target will compile the solidity contracts required for the tests
 [working-directory: 'contracts']
 build-contracts:
     forge build
 
 [working-directory: 'contracts']
-build-abi: build-contracts
-    mkdir -p abigen
-    forge inspect MockERC20 abi > abigen/MockERC20.json
-    forge inspect MockERC20 bytecode > abigen/MockERC20.bytecode
+build-bindings-requirements: build-contracts
+    forge inspect MockERC20 abi > {{TMPDIR}}/MockERC20.json
+    forge inspect MockERC20 bytecode > {{TMPDIR}}/MockERC20.bytecode
 
-build-bindings: build-abi
+build-bindings: build-bindings-requirements
     mkdir -p bindings/mockERC20
-    abigen --abi contracts/abigen/MockERC20.json --bin contracts/abigen/MockERC20.bytecode --pkg mockERC20 --out bindings/mockERC20/bindings.go
+    abigen --abi {{TMPDIR}}/MockERC20.json --bin {{TMPDIR}}/MockERC20.bytecode --pkg mockERC20 --out bindings/mockERC20/bindings.go
 
 build: build-bindings
 
