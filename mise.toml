@@ -8,3 +8,6 @@ just = "1.38.0"
 "go:github.com/ethereum/go-ethereum/cmd/abigen" = "1.15.2"
 "ubi:golangci/golangci-lint" = "v1.63.4"
 "ubi:kurtosis-tech/kurtosis-cli-release-artifacts[exe=kurtosis]" = "1.4.4"
+
+[settings]
+experimental = true
