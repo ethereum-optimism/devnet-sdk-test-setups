@@ -1,6 +1,7 @@
 package kurtosis
 
 import (
+	"devnetsdktest/bindings/mockERC20"
 	"math/big"
 	"testing"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/ethereum-optimism/optimism/devnet-sdk/testing/systest"
 	"github.com/ethereum-optimism/optimism/devnet-sdk/testing/testlib/validators"
 	sdktypes "github.com/ethereum-optimism/optimism/devnet-sdk/types"
-	bindings "github.com/ethereum-optimism/optimism/op-e2e/bindings"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -35,59 +35,36 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 			client, err := chain.Client()
 			require.NoError(t, err)
 
-			// Ugly code required to deploy an ERC20
-			erc20factory, err := bindings.NewOptimismMintableERC20Factory(common.HexToAddress("0x4200000000000000000000000000000000000012"), client)
-			require.NoError(t, err)
-
 			// Ugly code for signing transactions
 			signer := types.NewLondonSigner(chain.ID())
 			signerFn := func(address common.Address, tx *types.Transaction) (*types.Transaction, error) {
 				return types.SignTx(tx, signer, user.PrivateKey())
 			}
 
+			// Ugly code for getting the fees
 			block, err := client.BlockByNumber(ctx, nil)
 			require.NoError(t, err)
 
 			tipCap, err := client.SuggestGasTipCap(ctx)
 			require.NoError(t, err)
 
-			t.Log("Creating an OptimismMintableERC20")
+			t.Log("Deploying an ERC20")
 
-			// Now we create a new ERC20 token
-			//
-			// FIXME Instead of using the OptimismMintableERC20Factory, we'll need to deploy a fresh ERC20
-			createTx, err := erc20factory.CreateOptimismMintableERC20(&bind.TransactOpts{
+			// We need to deploy an ERC20 as a test prerequisite
+			_, _, mockERC20, err := mockERC20.DeployMockERC20(&bind.TransactOpts{
 				Signer:    signerFn,
 				From:      user.Address(),
 				Context:   ctx,
 				GasFeeCap: block.BaseFee(),
 				GasTipCap: tipCap,
-			}, common.HexToAddress("0x0000000000000000000000000000000000000007"), "Mock", "MCK")
-			require.NoError(t, err)
-
-			// Wait for it to land
-			createReceipt, err := bind.WaitMined(ctx, client, createTx)
+			}, client)
 			require.NoError(t, err)
 
 			// Log log log
-			t.Log("Created an OptimismMintableERC20")
+			t.Log("Deployed an ERC20")
 
-			// Now let's find the factory event that contains the address of the newly created ERC20
-			var erc20CreatedEvent *bindings.OptimismMintableERC20FactoryOptimismMintableERC20Created
-			for _, log := range createReceipt.Logs {
-				erc20CreatedEvent, err = erc20factory.ParseOptimismMintableERC20Created(*log)
-				if err == nil {
-					break
-				}
-			}
-			require.NotNil(t, erc20CreatedEvent)
-
-			// We create a binding for the new token
-			erc20, err := bindings.NewOptimismMintableERC20(erc20CreatedEvent.LocalToken, client)
-			require.NoError(t, err)
-
-			// Mint some tokens
-			mintTx, err := erc20.Mint(&bind.TransactOpts{
+			// Mint some tokens to the user
+			mintTx, err := mockERC20.Mint(&bind.TransactOpts{
 				Signer:    signerFn,
 				From:      user.Address(),
 				GasFeeCap: block.BaseFee(),
