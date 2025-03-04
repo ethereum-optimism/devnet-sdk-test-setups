@@ -10,8 +10,8 @@ build-contracts:
 
 [working-directory: 'contracts']
 build-bindings-requirements: build-contracts
-    forge inspect MockERC20 abi > {{TMPDIR}}/MockERC20.json
-    forge inspect MockERC20 bytecode > {{TMPDIR}}/MockERC20.bytecode
+    forge inspect MockERC20 abi --json > {{TMPDIR}}/MockERC20.json
+    forge inspect MockERC20 bytecode --json > {{TMPDIR}}/MockERC20.bytecode
 
 build-bindings: build-bindings-requirements
     mkdir -p bindings/mockERC20
