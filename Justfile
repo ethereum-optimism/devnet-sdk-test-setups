@@ -1,18 +1,6 @@
 DEFAULT_KURTOSIS_PACKAGE := 'github.com/ethpandaops/optimism-package@main'
 DEFAULT_KURTOSIS_ENCLAVE := 'devnet'
 
-lint:
-    golangci-lint run ./...
-
-lint-fix:
-    golangci-lint run ./... --fix
-
-test:
-    go test -v ./...
-
-tidy:
-    go mod tidy -x
-
 [working-directory: 'contracts']
 build-contracts:
     forge build
@@ -28,6 +16,18 @@ build-bindings: build-abi
     abigen --abi contracts/abigen/MockERC20.json --bin contracts/abigen/MockERC20.bytecode --pkg mockERC20 --out bindings/mockERC20/bindings.go
 
 build: build-bindings
+
+lint:
+    golangci-lint run ./...
+
+lint-fix:
+    golangci-lint run ./... --fix
+
+test: build
+    go test -v ./...
+
+tidy:
+    go mod tidy -x
 
 run-kurtosis ARGS ENCLAVE=DEFAULT_KURTOSIS_ENCLAVE PACKAGE=DEFAULT_KURTOSIS_PACKAGE:
     echo "Starting kurtosis enclave {{ENCLAVE}} from package {{PACKAGE}} and args file {{ARGS}}"
