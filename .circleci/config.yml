@@ -119,6 +119,11 @@ jobs:
       - run:
           name: Run lint
           command: just lint
+      - run:
+          name: Run build
+          command: |
+            just build
+            git diff --exit-code
   
   run-devnet-tests:
     executor: default
