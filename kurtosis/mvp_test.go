@@ -51,13 +51,16 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 			t.Log("Deploying an ERC20")
 
 			// We need to deploy an ERC20 as a test prerequisite
-			_, _, mockERC20, err := mockERC20.DeployMockERC20(&bind.TransactOpts{
+			_, deployTx, mockERC20, err := mockERC20.DeployMockERC20(&bind.TransactOpts{
 				Signer:    signerFn,
 				From:      user.Address(),
 				Context:   ctx,
 				GasFeeCap: block.BaseFee(),
 				GasTipCap: tipCap,
 			}, client)
+			require.NoError(t, err)
+
+			_, err = bind.WaitMined(ctx, client, deployTx)
 			require.NoError(t, err)
 
 			// Log log log
