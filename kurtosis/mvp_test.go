@@ -35,7 +35,7 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 
 			// We show when isthmus was activated, for visibility purposes
 			chainConfig := isthmusForkGetter(ctx)
-			t.Logf("Isthmus has been activated at %s", chainConfig.IsthmusTime)
+			t.Logf("Isthmus has been activated at %d", chainConfig.IsthmusTime)
 
 			// We'll need a wallet to sign transactions
 			user := walletGetter(ctx)
@@ -92,6 +92,8 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 			t.Log("Submitting InitiateWithdrawal transaction")
 			initiateWithdrawalTx, err := l2ToL1MessagePasser.InitiateWithdrawal(initiateWithdrawalTxOpts, user.Address(), big.NewInt(1_000_000), []byte{})
 			require.NoError(t, err)
+
+			t.Logf("Submitted InitiateWithdrawal transaction: %s", initiateWithdrawalTx.Hash().Hex())
 
 			// And wait for it to mine
 			t.Log("Waiting for InitiateWithdrawal transaction")
