@@ -93,8 +93,8 @@ github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5/go.mod h1:qssHWj6
 github.com/dsnet/golib v0.0.0-20171103203638-1ea166775780/go.mod h1:Lj+Z9rebOhdfkVLjJ8T6VcRQv3SXugXy999NBtR9aFY=
 github.com/ethereum-optimism/go-ethereum-hdwallet v0.1.3 h1:RWHKLhCrQThMfch+QJ1Z8veEq5ZO3DfIhZ7xgRP9WTc=
 github.com/ethereum-optimism/go-ethereum-hdwallet v0.1.3/go.mod h1:QziizLAiF0KqyLdNJYD7O5cpDlaFMNZzlxYNcWsJUxs=
-github.com/ethereum-optimism/op-geth v1.101500.1-rc.1 h1:nvfeMbZdXgrNI5EZtIUVZqql9Jms3F2Q5CWHz3Catr4=
-github.com/ethereum-optimism/op-geth v1.101500.1-rc.1/go.mod h1:OMpyVMMy5zpAAHlR5s/aGbXRk+7cIKczUEIJj54APbY=
+github.com/ethereum-optimism/op-geth v1.101503.0-rc.3 h1:tSKg1RpC70EPsZDyL2dVrggpldEaRVg25rDeB2pZYrk=
+github.com/ethereum-optimism/op-geth v1.101503.0-rc.3/go.mod h1:QUo3fn+45vWqJWzJW+rIzRHUV7NmhhHLPdI87mAn1M8=
 github.com/ethereum-optimism/optimism v1.11.3-0.20250311154728-ecf149b6807e h1:fOJNa5SQ9HPRnUf4QMQbow917ttTMJDgJKK5+iqdOH8=
 github.com/ethereum-optimism/optimism v1.11.3-0.20250311154728-ecf149b6807e/go.mod h1:UlPFrk+QNLneVMGzoOXH7Sd2In+28pInAVb17aXFNPg=
 github.com/ethereum/c-kzg-4844 v1.0.0 h1:0X1LBXxaEtYD9xsyj9B9ctQEZIpnvVDeoBx8aHEwTNA=
