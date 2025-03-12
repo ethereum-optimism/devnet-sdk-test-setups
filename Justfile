@@ -26,7 +26,7 @@ lint-fix:
     golangci-lint run ./... --fix
 
 test: build
-    go test -v ./...
+    go test -v -timeout 10m ./...
 
 tidy:
     go mod tidy -x
