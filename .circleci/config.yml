@@ -131,13 +131,22 @@ jobs:
       args-file:
         type: string
         description: Path to kurtosis args file
+      enclave-name:
+        type: string
+        description: Kurtosis enclave name
+        default: devnet
     steps:
       - checkout
       - install-dependencies
       - install-go-modules
       - start-kurtosis-devnet:
           args-file: << parameters.args-file >>
+          enclave-name: << parameters.enclave-name >>
       - run:
           name: Run tests
           command: just test
+      - run:
+          name: Dump kurtosis logs
+          when: always
+          command: ./scripts/kurtosis/dump-logs.sh "<< parameters.enclave-name >>"
             
