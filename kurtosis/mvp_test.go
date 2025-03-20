@@ -129,6 +129,8 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 				require.Equal(t, sequencerBlock.Hash(), block.Hash())
 			}
 
+			t.Logf("Checked block building, all blockhashes match for block %d: %s", targetBlockNumber, sequencerBlock.Hash().Hex())
+
 		},
 		isthmusForkValidator,
 		walletValidator,
