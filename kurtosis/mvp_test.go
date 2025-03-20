@@ -3,6 +3,7 @@ package kurtosis
 import (
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/ethereum-optimism/optimism/devnet-sdk/contracts/constants"
 	"github.com/ethereum-optimism/optimism/devnet-sdk/system"
@@ -110,8 +111,45 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 
 			// Make sure the block contains the new withdrawals root
 			require.Equal(t, *initiateWithdrawalBlock.WithdrawalsRoot(), postProof.StorageHash)
+
+			t.Log("Checking block building")
+
+			// We'll wait for five more blocks to spot any issues with block building
+			targetBlockNumber := initiateWithdrawalBlock.NumberU64() + 5
+
+			// As a reference, we'll grab the sequencer block
+			sequencerBlock, err := waitForBlock(t, sequencer, targetBlockNumber)
+			require.NoError(t, err)
+
+			// We'll go over all the nodes and check if the block hashes match
+			for _, node := range nodes {
+				block, err := waitForBlock(t, node, targetBlockNumber)
+				require.NoError(t, err)
+
+				require.Equal(t, sequencerBlock.Hash(), block.Hash())
+			}
+
 		},
 		isthmusForkValidator,
 		walletValidator,
 	)
+}
+
+func waitForBlock(t systest.T, node system.Node, targetBlockNumber uint64) (*types.Block, error) {
+	ctx := t.Context()
+
+	client, err := node.GethClient()
+	require.NoError(t, err)
+
+	currentBlock, err := client.BlockNumber(ctx)
+	require.NoError(t, err)
+
+	for currentBlock <= targetBlockNumber {
+		currentBlock, err = client.BlockNumber(ctx)
+		require.NoError(t, err)
+
+		time.Sleep(5 * time.Second)
+	}
+
+	return client.BlockByNumber(ctx, big.NewInt(int64(targetBlockNumber)))
 }
