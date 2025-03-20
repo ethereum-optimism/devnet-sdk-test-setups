@@ -20,7 +20,7 @@ build-bindings: build-bindings-requirements
 build: build-bindings
 
 lint:
-    golangci-lint run ./...
+    golangci-lint run --timeout 5m ./...
 
 lint-fix:
     golangci-lint run ./... --fix

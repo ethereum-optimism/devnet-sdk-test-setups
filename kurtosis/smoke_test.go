@@ -6,7 +6,6 @@ import (
 
 	"github.com/ethereum-optimism/optimism/devnet-sdk/system"
 	"github.com/ethereum-optimism/optimism/devnet-sdk/testing/systest"
-	"github.com/ethereum-optimism/optimism/devnet-sdk/testing/testlib/validators"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,14 +13,11 @@ import (
 //
 // FIXME https://github.com/ethereum-optimism/platforms-team/issues/650 is required to access all RPC URLs in a system
 func TestSystemBuildsBlocks(t *testing.T) {
-	lowLevelSysGetter, lowLevelSysValidator := validators.AcquireLowLevelSystem()
-
 	systest.SystemTest(t,
 		func(t systest.T, sys system.System) {
 			ctx := t.Context()
 
-			lowLevelSys := lowLevelSysGetter(ctx)
-			l2s := lowLevelSys.L2s()
+			l2s := sys.L2s()
 
 			numAttempts := 100
 			targetBlockNumber := uint64(100)
@@ -29,11 +25,14 @@ func TestSystemBuildsBlocks(t *testing.T) {
 				t.Logf("Checking blocks, attempt %d/%d", attempt, numAttempts)
 
 				// We'll accumulate all L2s that have not yet reached the block target in this list
-				pendingL2s := []system.LowLevelChain{}
+				pendingL2s := []system.L2Chain{}
 
 				for _, l2 := range l2s {
+					// We grab the sequencer node
+					node := l2.Nodes()[0]
+
 					// We get hold of a client
-					client, err := l2.Client()
+					client, err := node.GethClient()
 					require.NoError(t, err)
 
 					// We ask the node for its block number
@@ -68,6 +67,5 @@ func TestSystemBuildsBlocks(t *testing.T) {
 			require.FailNow(t, "Did not reach target block number in time")
 
 		},
-		lowLevelSysValidator,
 	)
 }

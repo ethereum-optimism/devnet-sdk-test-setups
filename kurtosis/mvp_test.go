@@ -3,6 +3,7 @@ package kurtosis
 import (
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/ethereum-optimism/optimism/devnet-sdk/contracts/constants"
 	"github.com/ethereum-optimism/optimism/devnet-sdk/system"
@@ -15,8 +16,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient/gethclient"
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +23,6 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 	chainIdx := uint64(0) // We'll use the first L2 chain for this test
 
 	walletGetter, walletValidator := validators.AcquireL2WalletWithFunds(chainIdx, sdktypes.NewBalance(big.NewInt(1.0*constants.ETH)))
-	lowLevelSystemGetter, lowLevelSystemValidator := validators.AcquireLowLevelSystem()
 
 	// This test should only run on isthmus forks
 	isthmusForkGetter, isthmusForkValidator := validators.AcquireL2WithFork(chainIdx, rollup.Isthmus)
@@ -40,21 +38,24 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 			// We'll need a wallet to sign transactions
 			user := walletGetter(ctx)
 
-			lowLevelSystem := lowLevelSystemGetter(ctx)
-			chain := lowLevelSystem.L2s()[chainIdx]
+			// And we'll need a reference to the chain and its nodes
+			chain := sys.L2s()[chainIdx]
+			nodes := chain.Nodes()
+
+			// Sequencer is always the first node
+			sequencer := nodes[0]
 
 			// AREA OF IMPROVEMENT
 			//
 			// Glue code between devnet-sdk and abigen bindings
-			client, err := chain.Client()
+			client, err := sequencer.GethClient()
 			require.NoError(t, err)
 
 			// AREA OF IMPROVEMENT
 			//
 			// Glue code between devnet-sdk and geth client
-			rpcClient, err := rpc.Dial(chain.RPCURL())
+			gethClient, err := sequencer.Client()
 			require.NoError(t, err)
-			gethClient := gethclient.New(rpcClient)
 
 			// AREA OF IMPROVEMENT
 			//
@@ -70,12 +71,8 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 			l2ToL1MessagePasser, err := bindings.NewL2ToL1MessagePasser(constants.L2ToL1MessagePasser, client)
 			require.NoError(t, err)
 
-			// Get a reference to a recent block
-			block, err := client.BlockByNumber(ctx, nil)
-			require.NoError(t, err)
-
 			// Get the storage root hash before the withdrawal
-			preProof, err := gethClient.GetProof(ctx, constants.L2ToL1MessagePasser, nil, block.Number())
+			preProof, err := gethClient.GetProof(ctx, constants.L2ToL1MessagePasser, nil, "latest")
 			require.NoError(t, err)
 
 			// Now it's time to perform the withdrawal
@@ -103,7 +100,7 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 			t.Log("Initiated a withdrawal")
 
 			// Get the storage root hash after the withdrawal
-			postProof, err := gethClient.GetProof(ctx, constants.L2ToL1MessagePasser, nil, initiateWithdrawalReceipt.BlockNumber)
+			postProof, err := gethClient.GetProof(ctx, constants.L2ToL1MessagePasser, nil, initiateWithdrawalReceipt.BlockHash.Hex())
 			require.NoError(t, err)
 
 			require.NotEqual(t, postProof.StorageHash, preProof.StorageHash)
@@ -114,9 +111,47 @@ func TestIsthmusInitiateWithdrawal(t *testing.T) {
 
 			// Make sure the block contains the new withdrawals root
 			require.Equal(t, *initiateWithdrawalBlock.WithdrawalsRoot(), postProof.StorageHash)
+
+			t.Log("Checking block building")
+
+			// We'll wait for five more blocks to spot any issues with block building
+			targetBlockNumber := initiateWithdrawalBlock.NumberU64() + 5
+
+			// As a reference, we'll grab the sequencer block
+			sequencerBlock, err := waitForBlock(t, sequencer, targetBlockNumber)
+			require.NoError(t, err)
+
+			// We'll go over all the nodes and check if the block hashes match
+			for _, node := range nodes {
+				block, err := waitForBlock(t, node, targetBlockNumber)
+				require.NoError(t, err)
+
+				require.Equal(t, sequencerBlock.Hash(), block.Hash())
+			}
+
+			t.Logf("Checked block building, all blockhashes match for block %d: %s", targetBlockNumber, sequencerBlock.Hash().Hex())
+
 		},
 		isthmusForkValidator,
 		walletValidator,
-		lowLevelSystemValidator,
 	)
+}
+
+func waitForBlock(t systest.T, node system.Node, targetBlockNumber uint64) (*types.Block, error) {
+	ctx := t.Context()
+
+	client, err := node.GethClient()
+	require.NoError(t, err)
+
+	currentBlock, err := client.BlockNumber(ctx)
+	require.NoError(t, err)
+
+	for currentBlock <= targetBlockNumber {
+		currentBlock, err = client.BlockNumber(ctx)
+		require.NoError(t, err)
+
+		time.Sleep(5 * time.Second)
+	}
+
+	return client.BlockByNumber(ctx, big.NewInt(int64(targetBlockNumber)))
 }
